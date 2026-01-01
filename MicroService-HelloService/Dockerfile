@@ -1,6 +1,7 @@
-FROM openjdk:11
+FROM eclipse-temurin:11-jdk
+
 VOLUME /tmp
-EXPOSE 80
+EXPOSE 8080
 ADD target/*.jar app.jar
 ENV JAVA_OPTS=""
 

@@ -1,3 +1,3 @@
-region = "ca-central-1"
-bucket = "terraform-state-files-197686806564"
+region = "ap-south-1"
+bucket = "terraform-state-files-for-java-microservices"
 key    = "vd-prd/ecs-spring/infra.tfstate"
