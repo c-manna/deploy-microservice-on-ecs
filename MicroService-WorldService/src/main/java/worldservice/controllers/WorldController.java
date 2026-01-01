@@ -9,7 +9,7 @@ public class WorldController {
     @GetMapping("/world")
     public String getWorld(){
 
-        return "hello from service World \n";
+        return "hello from service World $\n";
 
     }
 
