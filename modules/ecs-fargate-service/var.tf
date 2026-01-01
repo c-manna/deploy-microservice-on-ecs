@@ -12,7 +12,7 @@ variable "ecs_cluster" {
   default = ""
 }
 variable "region" {
-  default = ""
+  default = "ap-south-1"
 }
 variable "desired_count" {
   default = "1"
