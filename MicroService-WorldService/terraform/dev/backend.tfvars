@@ -1,3 +1,3 @@
-region = "us-east-1"
+region = "ap-south-1"
 bucket = "terraform-state-files-for-java-microservices"
 key    = "dev/worldsvc.tfstate"
