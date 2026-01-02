@@ -4,7 +4,7 @@ module "ecs-fargate-service" {
   application         = var.application
   region              = var.region
   ecs_cluster         = "${var.environment}-cluster"
-  lb_name             = "${var.environment}-alb"
+  lb_name             = "${var.environment}-alb-hello-client"
   environment         = var.environment
   container_version   = var.container_version
   log_group_name      = "dev/world-service"

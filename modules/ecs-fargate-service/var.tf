@@ -3,7 +3,7 @@ variable "service_name" {
 }
 
 variable "vpc_id" {
-  default = ""
+  default = "vpc-0b6ca0870d2fff073"
 }
 variable "lb_name" {
   default = "dev-alb-hello-client"
