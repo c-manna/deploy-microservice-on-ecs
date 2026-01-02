@@ -1,0 +1,74 @@
+name: "Destroy ALL Microservices (Terraform)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment folder name inside each terraform dir (dev/stage/prod)"
+        required: true
+        default: "dev"
+      confirm:
+        description: "Type DESTROY to confirm"
+        required: true
+
+jobs:
+  destroy:
+    if: ${{ github.event.inputs.confirm == 'DESTROY' }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        svc:
+          # ✅ Update these dirs to match your repo
+          - name: hellosvc
+            dir: MicroService-HelloService/terraform
+            backend_key: hellosvc.tfstate
+          - name: clientsvc
+            dir: MicroService-HelloWorldClient/terraform
+            backend_key: clientsvc.tfstate
+          - name: worldsvc
+            dir: MicroService-WorldService/terraform
+            backend_key: worldsvc.tfstate
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Destroy ${{ matrix.svc.name }}
+        working-directory: ${{ matrix.svc.dir }}
+        env:
+          TF_IN_AUTOMATION: "true"
+        run: |
+          echo "==> Destroying service: ${{ matrix.svc.name }}"
+          echo "==> Terraform dir:     ${{ matrix.svc.dir }}"
+          echo "==> Backend key:       ${{ matrix.svc.backend_key }}"
+          echo
+
+          # Clean old local terraform cache
+          rm -rf .terraform .terraform.lock.hcl || true
+
+          # IMPORTANT:
+          # backend.tfvars typically includes bucket, region, dynamodb_table, encrypt
+          # We override 'key' here to point to each service's state file
+          terraform init \
+            -reconfigure \
+            -backend-config=${{ github.event.inputs.environment }}/backend.tfvars \
+            -backend-config="key=${{ matrix.svc.backend_key }}"
+
+          terraform destroy \
+            -auto-approve \
+            -var-file=${{ github.event.inputs.environment }}/terraform.tfvars
