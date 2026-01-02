@@ -18,9 +18,9 @@ data "aws_subnets" "public" {
     name   = "vpc-id"
     values = [var.vpc_id]
   }
-  tags = {
-    Name = "*Public*"
-  }
+  # tags = {
+  #   Name = "*Public*"
+  # }
 }
 
 data "aws_ecs_cluster" "cluster" {
