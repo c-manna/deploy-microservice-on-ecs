@@ -24,13 +24,13 @@ jobs:
           # ✅ Update these dirs to match your repo
           - name: hellosvc
             dir: MicroService-HelloService/terraform
-            backend_key: hellosvc.tfstate
+            backend_key: dev/hellosvc.tfstate
           - name: clientsvc
             dir: MicroService-HelloWorldClient/terraform
-            backend_key: clientsvc.tfstate
+            backend_key: dev/clientsvc.tfstate
           - name: worldsvc
             dir: MicroService-WorldService/terraform
-            backend_key: worldsvc.tfstate
+            backend_key: dev/worldsvc.tfstate
 
     steps:
       - name: Checkout
