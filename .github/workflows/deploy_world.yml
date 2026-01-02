@@ -11,6 +11,7 @@ on:
     branches: [ main ]
     paths:
       - 'MicroService-WorldService/**'
+      - "modules/ecs-fargate-service/**"
 jobs:
   build:
      defaults:

@@ -6,10 +6,10 @@ variable "vpc_id" {
   default = ""
 }
 variable "lb_name" {
-  default = ""
+  default = "dev-alb-hello-client"
 }
 variable "ecs_cluster" {
-  default = ""
+  default = "dev-cluster"
 }
 variable "region" {
   default = "ap-south-1"
@@ -52,7 +52,7 @@ variable "health_check_path" {
   default = "/"
 }
 variable "cloudmap_namespace" {
-  default = ""
+  default = "corp"
 }
 variable "path_pattern" {
   default = ""
