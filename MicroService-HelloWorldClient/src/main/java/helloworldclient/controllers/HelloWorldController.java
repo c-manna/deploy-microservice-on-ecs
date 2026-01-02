@@ -17,7 +17,7 @@ public class HelloWorldController {
         String hello = rest.getForObject("http://hello.corp/hello", String.class);
         String world = rest.getForObject("http://world.corp/world", String.class);
 
-        return hello + " $ " + world;
+        return hello + " " + world;
 
     }
 
