@@ -4,7 +4,7 @@ resource "aws_ecs_service" "app_service" {
   task_definition       = aws_ecs_task_definition.app_task.arn    # Reference the task that the service will spin up
   launch_type           = "FARGATE"
   desired_count         = var.desired_count # Set up the number of containers to 3
-  wait_for_steady_state = true
+  wait_for_steady_state = false
   scheduling_strategy   = "REPLICA"
   force_new_deployment  = true
   deployment_controller {
@@ -26,8 +26,8 @@ resource "aws_ecs_service" "app_service" {
     security_groups  = [aws_security_group.service_security_group.id] # Set up the security group
   }
   timeouts {
-    create = "7m"
-    update = "7m"
+    create = "20m"
+    update = "20m"
   }
 }
 
