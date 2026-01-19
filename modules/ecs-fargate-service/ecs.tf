@@ -22,7 +22,7 @@ resource "aws_ecs_service" "app_service" {
   }
   network_configuration {
     subnets          = data.aws_subnets.public.ids
-    assign_public_ip = true                                          # Provide the containers with public IPs
+    assign_public_ip = true                                           # Provide the containers with public IPs
     security_groups  = [aws_security_group.service_security_group.id] # Set up the security group
   }
   timeouts {
@@ -83,3 +83,36 @@ resource "aws_service_discovery_service" "example" {
     failure_threshold = 1
   }
 }
+
+# ECS service autoscaling target
+resource "aws_appautoscaling_target" "ecs" {
+  service_namespace  = "ecs"
+  scalable_dimension = "ecs:service:DesiredCount"
+
+  resource_id = "service/${data.aws_ecs_cluster.cluster.cluster_name}/${aws_ecs_service.app_service.name}"
+
+  min_capacity = 1
+  max_capacity = 5
+}
+
+# Scale based on ALB requests per target
+resource "aws_appautoscaling_policy" "ecs_alb_rps" {
+  name               = "${var.application}-${var.environment}-alb-rps"
+  policy_type        = "TargetTrackingScaling"
+  service_namespace  = aws_appautoscaling_target.ecs.service_namespace
+  scalable_dimension = aws_appautoscaling_target.ecs.scalable_dimension
+  resource_id        = aws_appautoscaling_target.ecs.resource_id
+
+  target_tracking_scaling_policy_configuration {
+    target_value = 500
+
+    predefined_metric_specification {
+      predefined_metric_type = "ALBRequestCountPerTarget"
+      resource_label         = "${aws_lb.alb.arn_suffix}/targetgroup/${aws_lb_target_group.app.arn_suffix}"
+    }
+
+    scale_in_cooldown  = 60
+    scale_out_cooldown = 30
+  }
+}
+
