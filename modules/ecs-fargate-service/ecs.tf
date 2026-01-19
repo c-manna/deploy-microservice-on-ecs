@@ -108,7 +108,7 @@ resource "aws_appautoscaling_policy" "ecs_alb_rps" {
 
     predefined_metric_specification {
       predefined_metric_type = "ALBRequestCountPerTarget"
-      resource_label         = "${aws_lb.alb.arn_suffix}/targetgroup/${aws_lb_target_group.app.arn_suffix}"
+      resource_label = "${data.aws_lb.alb.arn_suffix}/targetgroup/${aws_lb_target_group.app.arn_suffix}"
     }
 
     scale_in_cooldown  = 60
