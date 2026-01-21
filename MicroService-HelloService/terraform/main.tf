@@ -46,11 +46,11 @@ module "ecs-fargate-service" {
   scale_out_cooldown              = var.scale_out_cooldown
 
   # your service-specific values (keep as-is)
-  log_group_name      = "dev/world-service"
-  ecr_repository_name = "public.ecr.aws/j9e2f6x4/world-svc"
+  log_group_name      = "dev/hello-service"
+  ecr_repository_name = "public.ecr.aws/j9e2f6x4/hello-svc"
   port                = 80
-  health_check_path   = "/world"
-  path_pattern        = "/world"
+  health_check_path   = "/hello"
+  path_pattern        = "/hello"
 
   # IMPORTANT: cpu/memory should be numbers (not strings)
   cpu    = 512

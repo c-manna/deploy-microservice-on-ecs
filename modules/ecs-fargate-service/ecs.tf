@@ -5,8 +5,8 @@ resource "aws_ecs_task_definition" "task" {
   network_mode = local.is_fargate ? "awsvpc" : "bridge"
 
   requires_compatibilities = local.is_fargate ? ["FARGATE"] : ["EC2"]
-  cpu    = local.is_fargate ? tostring(var.cpu) : null
-  memory = local.is_fargate ? tostring(var.memory) : null
+  cpu                      = local.is_fargate ? tostring(var.cpu) : null
+  memory                   = local.is_fargate ? tostring(var.memory) : null
 
   execution_role_arn = aws_iam_role.ecs_task_execution.arn
 
@@ -19,7 +19,7 @@ resource "aws_ecs_task_definition" "task" {
       portMappings = [
         local.is_fargate
         ? { containerPort = var.port, hostPort = var.port, protocol = "tcp" }
-        : { containerPort = var.port, hostPort = 0,        protocol = "tcp" }
+        : { containerPort = var.port, hostPort = 0, protocol = "tcp" }
       ]
 
       logConfiguration = {
@@ -90,7 +90,7 @@ resource "aws_ecs_service" "svc" {
     update = "20m"
   }
 
-  # STATIC depends_on to ensure resources are always referenced correctly
+  # Always reference this, but avoid the conditional list issue
   depends_on = local.is_ec2 ? [aws_ecs_cluster_capacity_providers.attach] : []
 }
 
