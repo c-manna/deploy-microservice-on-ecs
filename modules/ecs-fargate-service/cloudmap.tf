@@ -2,7 +2,7 @@ resource "aws_service_discovery_service" "sd" {
   name = var.application
 
   dns_config {
-    namespace_id = data.aws_service_discovery_dns_namespace.ns.id
+    namespace_id = data.aws_service_discovery_dns_namespace.test.id
     dns_records {
       ttl  = 10
       type = "A"
