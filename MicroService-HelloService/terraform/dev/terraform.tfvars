@@ -3,7 +3,7 @@ vpc_id             = "vpc-0b6ca0870d2fff073"
 cloudmap_namespace = "corp"
 container_version  = "v1"
 
-compute_type = "FARGATE"
+compute_type = "EC2" # or "FARGATE" | "EC2"
 
 desired_count = 1
 
