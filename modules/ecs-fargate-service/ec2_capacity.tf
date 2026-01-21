@@ -3,18 +3,17 @@ locals {
 }
 
 resource "aws_launch_template" "ecs" {
-  count         = local.is_ec2 ? 1 : 0
-  name_prefix   = "${local.service_name}-ecs-"
+  name_prefix   = "${var.application}-${var.environment}-ecs-"
   image_id      = data.aws_ssm_parameter.ecs_ami_al2.value
   instance_type = var.ecs_instance_type
   key_name      = var.ecs_key_name
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.ecs_instance_profile[0].name
+    name = aws_iam_instance_profile.ecs_instance_profile.name
   }
 
   network_interfaces {
-    security_groups             = [aws_security_group.ecs_instance_sg[0].id]
+    security_groups             = [aws_security_group.ecs_instance_sg.id]
     associate_public_ip_address = var.ecs_instances_public_ip
   }
 
@@ -22,20 +21,20 @@ resource "aws_launch_template" "ecs" {
     #!/bin/bash
     echo "ECS_CLUSTER=${var.ecs_cluster}" >> /etc/ecs/ecs.config
     echo "ECS_ENABLE_TASK_IAM_ROLE=true" >> /etc/ecs/ecs.config
+    echo "ECS_ENABLE_TASK_ENI=false" >> /etc/ecs/ecs.config
   EOF
   )
 
   tag_specifications {
     resource_type = "instance"
     tags = {
-      Name = "${local.service_name}-ecs-instance"
+      Name = "${var.application}-${var.environment}-ecs-instance"
     }
   }
 }
 
 resource "aws_autoscaling_group" "ecs" {
-  count               = local.is_ec2 ? 1 : 0
-  name                = "${local.service_name}-ecs-asg"
+  name                = "${var.application}-${var.environment}-ecs-asg"
   min_size            = var.ecs_instance_min
   max_size            = var.ecs_instance_max
   desired_capacity    = var.ecs_instance_desired
@@ -45,10 +44,17 @@ resource "aws_autoscaling_group" "ecs" {
   health_check_grace_period = 120
 
   launch_template {
-    id      = aws_launch_template.ecs[0].id
+    id      = aws_launch_template.ecs.id
     version = "$Latest"
   }
 
+  tag {
+    key                 = "Name"
+    value               = "${var.application}-${var.environment}-ecs-asg"
+    propagate_at_launch = true
+  }
+
+  # Important: this tag helps identify ECS instances
   tag {
     key                 = "AmazonECSManaged"
     value               = "true"
@@ -56,13 +62,11 @@ resource "aws_autoscaling_group" "ecs" {
   }
 }
 
-# Capacity Provider (recommended for EC2 so infra scales nicely)
 resource "aws_ecs_capacity_provider" "ec2" {
-  count = local.is_ec2 ? 1 : 0
-  name  = "${local.service_name}-cp"
+  name = "${var.application}-${var.environment}-cp"
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn = aws_autoscaling_group.ecs[0].arn
+    auto_scaling_group_arn = aws_autoscaling_group.ecs.arn
 
     managed_scaling {
       status                    = "ENABLED"
@@ -76,14 +80,15 @@ resource "aws_ecs_capacity_provider" "ec2" {
   }
 }
 
-resource "aws_ecs_cluster_capacity_providers" "attach" {
-  count        = local.is_ec2 ? 1 : 0
+resource "aws_ecs_cluster_capacity_providers" "this" {
   cluster_name = data.aws_ecs_cluster.cluster.cluster_name
 
-  capacity_providers = [aws_ecs_capacity_provider.ec2[0].name]
+  capacity_providers = [
+    aws_ecs_capacity_provider.ec2.name
+  ]
 
   default_capacity_provider_strategy {
-    capacity_provider = aws_ecs_capacity_provider.ec2[0].name
+    capacity_provider = aws_ecs_capacity_provider.ec2.name
     weight            = 1
     base              = 1
   }

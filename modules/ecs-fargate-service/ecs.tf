@@ -1,25 +1,18 @@
-resource "aws_ecs_task_definition" "task" {
-  family = local.service_name
-
-  # Fargate uses awsvpc; EC2 uses bridge (simple & standard)
-  network_mode = local.is_fargate ? "awsvpc" : "bridge"
-
-  requires_compatibilities = local.is_fargate ? ["FARGATE"] : ["EC2"]
-  cpu                      = local.is_fargate ? tostring(var.cpu) : null
-  memory                   = local.is_fargate ? tostring(var.memory) : null
-
-  execution_role_arn = aws_iam_role.ecs_task_execution.arn
+resource "aws_ecs_task_definition" "app_task" {
+  family = "${var.application}-${var.environment}"
 
   container_definitions = jsonencode([
     {
-      name      = local.service_name
+      name      = "${var.application}-${var.environment}"
       image     = "${var.ecr_repository_name}:${var.container_version}"
       essential = true
 
       portMappings = [
-        local.is_fargate
-        ? { containerPort = var.port, hostPort = var.port, protocol = "tcp" }
-        : { containerPort = var.port, hostPort = 0, protocol = "tcp" }
+        {
+          containerPort = var.port
+          hostPort      = 0
+          protocol      = "tcp"
+        }
       ]
 
       logConfiguration = {
@@ -35,54 +28,65 @@ resource "aws_ecs_task_definition" "task" {
       cpu    = var.cpu
     }
   ])
+
+  requires_compatibilities = ["EC2"]
+  network_mode             = "bridge"
+
+  execution_role_arn = aws_iam_role.ecsTaskExecutionRole.arn
 }
 
-resource "aws_ecs_service" "svc" {
-  name            = local.service_name
+resource "aws_service_discovery_service" "example" {
+  name = var.application
+
+  dns_config {
+    namespace_id = data.aws_service_discovery_dns_namespace.test.id
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+
+    routing_policy = "MULTIVALUE"
+  }
+
+  # failure_threshold deprecated; AWS always uses 1 now, so omit it
+  health_check_custom_config {}
+}
+
+resource "aws_ecs_service" "app_service" {
+  name            = "${var.application}-${var.environment}"
   cluster         = data.aws_ecs_cluster.cluster.id
-  task_definition = aws_ecs_task_definition.task.arn
+  task_definition = aws_ecs_task_definition.app_task.arn
 
   desired_count         = var.desired_count
   wait_for_steady_state = false
-  force_new_deployment  = true
   scheduling_strategy   = "REPLICA"
+  force_new_deployment  = true
 
-  # For EC2 mode, use capacity provider strategy
-  dynamic "capacity_provider_strategy" {
-    for_each = local.is_ec2 ? [1] : []
-    content {
-      capacity_provider = aws_ecs_capacity_provider.ec2[0].name
-      weight            = 1
-      base              = 1
-    }
+  # Use EC2 capacity provider (recommended)
+  capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.ec2.name
+    weight            = 1
+    base              = 1
   }
 
-  # For Fargate mode, use launch_type
-  launch_type = local.is_fargate ? "FARGATE" : null
-
-  # Only Fargate needs network_configuration (awsvpc)
-  dynamic "network_configuration" {
-    for_each = local.is_fargate ? [1] : []
-    content {
-      subnets          = data.aws_subnets.public.ids
-      assign_public_ip = true
-      security_groups  = [aws_security_group.task_sg[0].id]
-    }
+  deployment_controller {
+    type = "ECS"
   }
 
+  # If your app takes time to boot, increase this
   health_check_grace_period_seconds = 120
 
   load_balancer {
     target_group_arn = aws_lb_target_group.app.arn
-    container_name   = local.service_name
+    container_name   = "${var.application}-${var.environment}"
     container_port   = var.port
   }
 
-  # Cloud Map service discovery
+  # For bridge mode, specify port for Cloud Map
   service_registries {
-    registry_arn = aws_service_discovery_service.sd.arn
-    # For EC2 bridge mode Cloud Map needs port
-    port = var.port
+    registry_arn = aws_service_discovery_service.example.arn
+    port         = var.port
   }
 
   timeouts {
@@ -90,7 +94,39 @@ resource "aws_ecs_service" "svc" {
     update = "20m"
   }
 
-  # Always reference this, but avoid the conditional list issue
-  depends_on = local.is_ec2 ? [aws_ecs_cluster_capacity_providers.attach] : []
+  depends_on = [
+    aws_ecs_cluster_capacity_providers.this
+  ]
 }
 
+# -----------------------------
+# ECS service autoscaling (tasks)
+# -----------------------------
+resource "aws_appautoscaling_target" "ecs" {
+  service_namespace  = "ecs"
+  scalable_dimension = "ecs:service:DesiredCount"
+  resource_id        = "service/${data.aws_ecs_cluster.cluster.cluster_name}/${aws_ecs_service.app_service.name}"
+
+  min_capacity = var.ecs_tasks_min
+  max_capacity = var.ecs_tasks_max
+}
+
+resource "aws_appautoscaling_policy" "ecs_alb_rps" {
+  name               = "${var.application}-${var.environment}-alb-rps"
+  policy_type        = "TargetTrackingScaling"
+  service_namespace  = aws_appautoscaling_target.ecs.service_namespace
+  scalable_dimension = aws_appautoscaling_target.ecs.scalable_dimension
+  resource_id        = aws_appautoscaling_target.ecs.resource_id
+
+  target_tracking_scaling_policy_configuration {
+    target_value = var.alb_req_per_target_target_value
+
+    predefined_metric_specification {
+      predefined_metric_type = "ALBRequestCountPerTarget"
+      resource_label         = "${data.aws_lb.alb.arn_suffix}/${aws_lb_target_group.app.arn_suffix}"
+    }
+
+    scale_in_cooldown  = var.scale_in_cooldown
+    scale_out_cooldown = var.scale_out_cooldown
+  }
+}

@@ -1,32 +1,8 @@
-# SG for ECS tasks (Fargate uses this; EC2 bridge mode doesn't need per-task SG)
-resource "aws_security_group" "task_sg" {
-  count  = local.is_fargate ? 1 : 0
-  name   = "${local.service_name}-task-sg"
-  vpc_id = data.aws_vpc.vpc.id
-
-  # Allow ALB -> tasks on container port
-  ingress {
-    from_port       = var.port
-    to_port         = var.port
-    protocol        = "tcp"
-    security_groups = data.aws_lb.alb.security_groups
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-# SG for ECS EC2 instances (only EC2 mode)
 resource "aws_security_group" "ecs_instance_sg" {
-  count  = local.is_ec2 ? 1 : 0
-  name   = "${local.service_name}-ecs-instance-sg"
-  vpc_id = data.aws_vpc.vpc.id
+  name   = "${var.application}-${var.environment}-ecs-ec2-sg"
+  vpc_id = data.aws_vpc.vpcid.id
 
-  # ALB -> instances ephemeral ports (bridge + dynamic host ports)
+  # Allow ALB -> ECS instances on ECS ephemeral ports (bridge mode + dynamic host ports)
   ingress {
     from_port       = 32768
     to_port         = 65535
@@ -34,12 +10,12 @@ resource "aws_security_group" "ecs_instance_sg" {
     security_groups = data.aws_lb.alb.security_groups
   }
 
-  # Optional internal access inside VPC
+  # Allow internal VPC traffic (service-to-service if needed)
   ingress {
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = [data.aws_vpc.vpc.cidr_block]
+    cidr_blocks = [data.aws_vpc.vpcid.cidr_block]
   }
 
   egress {
