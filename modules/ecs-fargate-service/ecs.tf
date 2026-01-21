@@ -35,24 +35,6 @@ resource "aws_ecs_task_definition" "app_task" {
   execution_role_arn = aws_iam_role.ecsTaskExecutionRole.arn
 }
 
-resource "aws_service_discovery_service" "example" {
-  name = var.application
-
-  dns_config {
-    namespace_id = data.aws_service_discovery_dns_namespace.test.id
-
-    dns_records {
-      ttl  = 10
-      type = "A"
-    }
-
-    routing_policy = "MULTIVALUE"
-  }
-
-  # failure_threshold deprecated; AWS always uses 1 now, so omit it
-  health_check_custom_config {}
-}
-
 resource "aws_ecs_service" "app_service" {
   launch_type     = "EC2"
   name            = "${var.application}-${var.environment}"
