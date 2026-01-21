@@ -1,7 +1,3 @@
-locals {
-  instance_subnets = length(var.ecs_instance_subnet_ids) > 0 ? var.ecs_instance_subnet_ids : data.aws_subnets.private.ids
-}
-
 resource "aws_launch_template" "ecs" {
   name_prefix   = "${var.application}-${var.environment}-ecs-"
   image_id      = data.aws_ssm_parameter.ecs_ami_al2.value
@@ -38,7 +34,7 @@ resource "aws_autoscaling_group" "ecs" {
   min_size            = var.ecs_instance_min
   max_size            = var.ecs_instance_max
   desired_capacity    = var.ecs_instance_desired
-  vpc_zone_identifier = var.ecs_instance_subnet_ids  # Reference your subnet IDs
+  # vpc_zone_identifier = var.ecs_instance_subnet_ids  # Reference your subnet IDs
 
   health_check_type         = "EC2"
   health_check_grace_period = 120
@@ -49,7 +45,7 @@ resource "aws_autoscaling_group" "ecs" {
   }
 
   # Optional: Add specific availability zones if needed
-  availability_zones = data.aws_availability_zones.available.names  # Use AZs in your region
+  # availability_zones = data.aws_availability_zones.available.names  # Use AZs in your region
 
   tag {
     key                 = "Name"
