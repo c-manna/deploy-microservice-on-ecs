@@ -1,6 +1,6 @@
 resource "aws_security_group" "ecs_instance_sg" {
   name   = "${var.application}-${var.environment}-ecs-ec2-sg"
-  vpc_id = data.aws_vpc.vpcid.id
+  vpc_id = data.aws_vpc.vpc.id
 
   # Allow ALB -> ECS instances on ECS ephemeral ports (bridge mode + dynamic host ports)
   ingress {
@@ -15,7 +15,7 @@ resource "aws_security_group" "ecs_instance_sg" {
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = [data.aws_vpc.vpcid.cidr_block]
+    cidr_blocks = [data.aws_vpc.vpc.cidr_block]
   }
 
   egress {

@@ -15,5 +15,8 @@ module "ecs-fargate-service" {
   cpu                 = "512"
   memory              = "1024"
   path_pattern        = "/hello"
+  ecs_tasks_max       = 5
+  ecs_tasks_min       = 1
+  desired_count       = 1
 }
 

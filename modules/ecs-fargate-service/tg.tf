@@ -3,7 +3,7 @@ resource "aws_lb_target_group" "app" {
   port        = var.port
   protocol    = "HTTP"
   target_type = "instance"
-  vpc_id      = data.aws_vpc.vpcid.id
+  vpc_id      = data.aws_vpc.vpc.id
 
   health_check {
     enabled             = true
