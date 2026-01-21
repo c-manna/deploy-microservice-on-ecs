@@ -20,3 +20,19 @@ variable "vpc_id" {
 variable "container_version" {
   default = ""
 }
+
+variable "ecs_tasks_min" {
+  type    = number
+  default = 1
+}
+
+variable "ecs_tasks_max" {
+  type    = number
+  default = 5
+}
+
+variable "alb_req_per_target_target_value" {
+  description = "The target value for the Application Load Balancer request per target"
+  type        = number
+  default     = 100
+}

@@ -18,5 +18,6 @@ module "ecs-fargate-service" {
   ecs_tasks_max       = 5
   ecs_tasks_min       = 1
   desired_count       = 1
+  alb_req_per_target_target_value = 500
 }
 
