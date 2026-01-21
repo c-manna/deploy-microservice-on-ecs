@@ -90,5 +90,6 @@ resource "aws_ecs_service" "svc" {
     update = "20m"
   }
 
-  depends_on = local.is_ec2 ? [aws_ecs_cluster_capacity_providers.attach[0]] : []
+  depends_on = local.is_ec2 ? [aws_ecs_cluster_capacity_providers.attach] : []
+
 }
