@@ -18,7 +18,7 @@ data "aws_lb_listener" "http" {
 data "aws_region" "current" {}
 
 # Private namespace for service discovery (Cloud Map)
-data "aws_service_discovery_dns_namespace" "ns" {
+data "aws_service_discovery_dns_namespace" "test" {
   name = var.cloudmap_namespace
   type = "DNS_PRIVATE"
 }
