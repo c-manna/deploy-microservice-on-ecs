@@ -69,7 +69,7 @@ data "aws_subnets" "public" {
     values = [var.vpc_id]
   }
 
-  tags = {
-    Name = "*Public*" # Update based on your actual tag filtering
-  }
+  # tags = {
+  #   Name = "*Public*" # Update based on your actual tag filtering
+  # }
 }
