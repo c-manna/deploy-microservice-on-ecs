@@ -38,7 +38,7 @@ resource "aws_autoscaling_group" "ecs" {
   min_size            = var.ecs_instance_min
   max_size            = var.ecs_instance_max
   desired_capacity    = var.ecs_instance_desired
-  vpc_zone_identifier = local.instance_subnets
+  vpc_zone_identifier = var.ecs_instance_subnet_ids  # Reference your subnet IDs
 
   health_check_type         = "EC2"
   health_check_grace_period = 120
@@ -48,19 +48,22 @@ resource "aws_autoscaling_group" "ecs" {
     version = "$Latest"
   }
 
+  # Optional: Add specific availability zones if needed
+  availability_zones = data.aws_availability_zones.available.names  # Use AZs in your region
+
   tag {
     key                 = "Name"
     value               = "${var.application}-${var.environment}-ecs-asg"
     propagate_at_launch = true
   }
 
-  # Important: this tag helps identify ECS instances
   tag {
     key                 = "AmazonECSManaged"
     value               = "true"
     propagate_at_launch = true
   }
 }
+
 
 resource "aws_ecs_capacity_provider" "ec2" {
   name = "${var.application}-${var.environment}-cp"

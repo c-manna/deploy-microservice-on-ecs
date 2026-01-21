@@ -45,3 +45,31 @@ data "aws_region" "current" {}
 data "aws_ssm_parameter" "ecs_ami_al2" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
+
+# Fetch Availability Zones for your region
+data "aws_availability_zones" "available" {
+  state = "available" # You can filter by 'available' state to get only the active AZs
+}
+
+# If you have private or public subnets defined in your VPC, you can fetch them here
+data "aws_subnets" "private" {
+  filter {
+    name   = "vpc-id"
+    values = [var.vpc_id]
+  }
+
+  tags = {
+    Name = "*Private*" # Update based on your actual tag filtering
+  }
+}
+
+data "aws_subnets" "public" {
+  filter {
+    name   = "vpc-id"
+    values = [var.vpc_id]
+  }
+
+  tags = {
+    Name = "*Public*" # Update based on your actual tag filtering
+  }
+}
