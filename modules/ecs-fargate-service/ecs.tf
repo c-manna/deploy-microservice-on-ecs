@@ -54,6 +54,7 @@ resource "aws_service_discovery_service" "example" {
 }
 
 resource "aws_ecs_service" "app_service" {
+  launch_type     = "EC2"
   name            = "${var.application}-${var.environment}"
   cluster         = data.aws_ecs_cluster.cluster.id
   task_definition = aws_ecs_task_definition.app_task.arn
