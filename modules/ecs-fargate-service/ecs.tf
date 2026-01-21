@@ -90,6 +90,7 @@ resource "aws_ecs_service" "svc" {
     update = "20m"
   }
 
+  # STATIC depends_on to ensure resources are always referenced correctly
   depends_on = local.is_ec2 ? [aws_ecs_cluster_capacity_providers.attach] : []
-
 }
+
