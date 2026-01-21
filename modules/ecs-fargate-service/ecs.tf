@@ -68,7 +68,7 @@ resource "aws_ecs_service" "app_service" {
 
   # For bridge mode, specify port for Cloud Map
   service_registries {
-    registry_arn = aws_service_discovery_service.example.arn
+    registry_arn = aws_service_discovery_service.sd.arn
     port         = var.port
   }
 
