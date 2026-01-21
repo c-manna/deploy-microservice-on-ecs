@@ -10,7 +10,7 @@ data "aws_lb" "alb" {
   name = var.lb_name
 }
 
-data "aws_lb_listener" "http" {
+data "aws_lb_listener" "listner" {
   load_balancer_arn = data.aws_lb.alb.arn
   port              = 80
 }
