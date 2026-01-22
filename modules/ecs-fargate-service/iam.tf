@@ -2,8 +2,17 @@
 # Task execution role (same idea as before)
 # -----------------------------
 resource "aws_iam_role" "ecsTaskExecutionRole" {
-  name               = "ecsTaskExecutionRole-${var.application}-${var.environment}"
-  assume_role_policy = data.aws_iam_policy_document.assume_role_policy_tasks.json
+  name = "ecsTaskExecutionRole-${var.application}-${var.environment}"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+    }]
+  })
 }
 
 data "aws_iam_policy_document" "assume_role_policy_tasks" {
