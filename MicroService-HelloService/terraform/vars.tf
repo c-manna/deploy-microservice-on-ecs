@@ -36,3 +36,15 @@ variable "alb_req_per_target_target_value" {
   type        = number
   default     = 100
 }
+
+variable "scale_out_cooldown" {
+  description = "Cooldown period for scaling out"
+  type        = number
+  default     = 30
+}
+
+variable "scale_in_cooldown" {
+  description = "Cooldown period for scaling in"
+  type        = number
+  default     = 120
+}

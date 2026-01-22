@@ -19,5 +19,7 @@ module "ecs-fargate-service" {
   ecs_tasks_min       = 1
   desired_count       = 1
   alb_req_per_target_target_value = 500
+  scale_in_cooldown               = 120
+  scale_out_cooldown              = 30
 }
 
