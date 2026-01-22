@@ -125,7 +125,7 @@ resource "aws_ecs_service" "app_service" {
   task_definition                   = aws_ecs_task_definition.app_task.arn
   desired_count                     = 1
   launch_type                       = "EC2" # Ensure this is EC2 if you're using EC2 instances
-  platform_version                  = "LATEST"
+  # platform_version                  = "LATEST"
   scheduling_strategy               = "REPLICA"
   force_new_deployment              = true
   health_check_grace_period_seconds = 120
