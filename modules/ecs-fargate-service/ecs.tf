@@ -1,6 +1,6 @@
 resource "aws_ecs_task_definition" "app_task" {
   family       = "${var.application}-${var.environment}"
-  network_mode = "bridge" # You can use 'bridge' or 'host' but not both with hostPort
+  network_mode = "bridge" # Using bridge or host, not both with hostPort
   container_definitions = jsonencode(
     [
       {
@@ -12,7 +12,7 @@ resource "aws_ecs_task_definition" "app_task" {
 
         portMappings = [
           {
-            containerPort = var.port
+            containerPort = var.port # Only specify containerPort, not hostPort
             protocol      = "tcp"
           }
         ]
@@ -34,13 +34,13 @@ resource "aws_ecs_task_definition" "app_task" {
   requires_compatibilities = ["EC2"]
 }
 
+
 resource "aws_ecs_service" "app_service" {
-  name            = "${var.application}-${var.environment}"
-  cluster         = data.aws_ecs_cluster.cluster.id
-  task_definition = aws_ecs_task_definition.app_task.arn
-  desired_count   = 1
-  launch_type     = "EC2" # Ensure this is EC2 if you're using EC2 instances
-  # platform_version                  = "LATEST"
+  name                              = "${var.application}-${var.environment}"
+  cluster                           = data.aws_ecs_cluster.cluster.id
+  task_definition                   = aws_ecs_task_definition.app_task.arn
+  desired_count                     = 1
+  launch_type                       = "EC2" # Ensure this is EC2 if you're using EC2 instances
   scheduling_strategy               = "REPLICA"
   force_new_deployment              = true
   health_check_grace_period_seconds = 120
@@ -48,7 +48,7 @@ resource "aws_ecs_service" "app_service" {
   # Load balancer configuration
   load_balancer {
     container_name   = "${var.application}-${var.environment}"
-    container_port   = 80 # Use containerPort instead of hostPort
+    container_port   = 80 # Use containerPort, not hostPort
     target_group_arn = aws_lb_target_group.app.arn
   }
 
@@ -77,6 +77,7 @@ resource "aws_ecs_service" "app_service" {
     aws_ecs_cluster_capacity_providers.this
   ]
 }
+
 
 
 
